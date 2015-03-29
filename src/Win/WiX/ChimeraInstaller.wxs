@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<Product Id="*" Name="${FBSTRING_ProductName}" Language="1033" Version="${FBSTRING_PLUGIN_VERSION}" Manufacturer="${FBSTRING_CompanyName}" UpgradeCode="{${FBControl_WixUpgradeCode_GUID}}">
+		<Package InstallerVersion="200" Compressed="yes" Description="Installer for the ${FBSTRING_ProductName}" InstallScope="perUser" />
+		<Upgrade Id="{${FBControl_WixUpgradeCode_GUID}}">
+			<UpgradeVersion
+					Property="OLD_VERSION_FOUND"
+					Minimum="0.0.1" IncludeMinimum="yes"
+					Maximum="${FBSTRING_PLUGIN_VERSION}" IncludeMaximum="yes"
+					OnlyDetect="no" IgnoreRemoveFailure="yes"
+					MigrateFeatures="yes" />
+		</Upgrade>
+		<Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable" />
+		<InstallExecuteSequence>
+			<RemoveExistingProducts After="InstallInitialize" />
+			<InstallExecute After="RemoveExistingProducts" />
+		</InstallExecuteSequence>
+		<Media Id="1" CompressionLevel="high" Cabinet="${PLUGIN_NAME}.cab" EmbedCab="yes" />
+
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Id="${FB_WIX_INSTALL_LOCATION}">
+				<Directory Id="PluginNameDir" Name="${FBSTRING_PluginName}">
+					<Component Id="PluginNameDirComp" Guid="*">
+						<RemoveFolder Id="RemovePluginNameDir" On="uninstall" />
+						<RegistryValue
+								Root="HKCU"
+								Key="SOFTWARE\${PLUGIN_NAME}"
+								Name="Uninstall"
+								Type="string"
+								Value="${FBSTRING_PLUGIN_VERSION}"
+								KeyPath="yes" />
+					</Component>
+					<Directory Id="INSTALLDIR" Name="${FBSTRING_PLUGIN_VERSION}">
+						<Component Id="InstallDirComp" Guid="*">
+							<RemoveFolder Id="RemoveInstallDir" On="uninstall" />
+							<RegistryValue
+									Root="HKCU"
+									Key="SOFTWARE\${PLUGIN_NAME}\${FBSTRING_PLUGIN_VERSION}"
+									Name="Uninstall"
+									Type="string"
+									Value="${FBSTRING_PLUGIN_VERSION}"
+									KeyPath="yes" />
+						</Component>
+
+						<Component Guid="{3234FE47-D5EF-4A92-A431-19C40AD671CD}" Id="c_DirectX">
+							<RegistryValue Root="HKCU" Key="SOFTWARE\${PLUGIN_NAME}\${FBSTRING_PLUGIN_VERSION}" Name="DirectXUninstall" Type="string" Value="${FBSTRING_PLUGIN_VERSION}" KeyPath="yes" />
+							<File Id="D3DCompiler.dll" Source="${CMAKE_CURRENT_SOURCE_DIR}\Win\WiX\DirectX\x86\d3dcompiler_47.dll" />
+						</Component>
+
+						<Component Guid="{AAA85D61-6E51-441A-B317-9E32726DB8CF}" Id="c_OpenSSL">
+							<RegistryValue Root="HKCU" Key="SOFTWARE\${PLUGIN_NAME}\${FBSTRING_PLUGIN_VERSION}" Name="OpenSSLUninstall" Type="string" Value="${FBSTRING_PLUGIN_VERSION}" KeyPath="yes" />
+							<File Id="libeay32.dll" Source="$(var.OPENSSL_ROOT_DIR)\libeay32.dll" />
+							<File Id="ssleay32.dll" Source="$(var.OPENSSL_ROOT_DIR)\ssleay32.dll" />
+							<File Id="msvcr90.dll" Source="$(var.OPENSSL_ROOT_DIR)\msvcr90.dll" />
+						</Component>
+
+						<Directory Id="lua" Name="lua">
+							<Component Guid="{D806CEE7-B8F2-4324-A4EA-E232F15C720E}" Id="c_lua">
+								<RemoveFolder On="uninstall" Id="u_lua" />
+								<RegistryValue Root="HKCU" Key="SOFTWARE\${PLUGIN_NAME}\${FBSTRING_PLUGIN_VERSION}\lua" Name="YoutubePlaylistUninstall" Type="string" Value="${FBSTRING_PLUGIN_VERSION}" KeyPath="yes" />
+							</Component>
+							<Directory Id="playlist" Name="playlist">
+								<Component Guid="{2EB56BEF-9803-426B-A086-AEA9F232762A}" Id="c_lua_playlist">
+									<RemoveFolder On="uninstall" Id="u_lua_playlist" />
+									<RegistryValue Root="HKCU" Key="SOFTWARE\${PLUGIN_NAME}\${FBSTRING_PLUGIN_VERSION}\lua\playlist" Name="YoutubePlaylistUninstall" Type="string" Value="${FBSTRING_PLUGIN_VERSION}" KeyPath="yes" />
+									<File Id="playlist_youtube.lua" Source="${CMAKE_CURRENT_SOURCE_DIR}\..\deps\playlist_youtube.lua" />
+								</Component>
+							</Directory>
+						</Directory>
+
+					</Directory>
+				</Directory>
+			</Directory>
+		</Directory>
+
+		<Feature Id="MainPluginFeature" Title="${FBSTRING_ProductName}" Level="1">
+			<ComponentRef Id="InstallDirComp"/>
+			<ComponentRef Id="PluginNameDirComp"/>
+			<ComponentGroupRef Id="PluginDLLGroup"/>
+			<ComponentRef Id="c_DirectX"/>
+			<ComponentGroupRef Id="VLC"/>
+			<ComponentRef Id="c_lua"/>
+			<ComponentRef Id="c_lua_playlist"/>
+			<ComponentGroupRef Id="QT"/>
+			<ComponentRef Id="c_OpenSSL"/>
+		</Feature>
+	</Product>
+</Wix>
